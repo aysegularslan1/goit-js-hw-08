@@ -64,44 +64,45 @@ const images = [
     },
   ];
   
-  const ul = document.querySelector('ul.gallery');
-  
-  images.forEach((image) => {
-    const li = document.createElement('li');
-    const a = document.createElement('a');
-    const img = document.createElement('img');
-  
-    a.href = image.original;
-    a.classList.add('gallery-link');
-    img.src = image.preview;
-    img.alt = image.description;
-    img.dataset.source = image.original;
-    img.classList.add('gallery-image');
-    li.classList.add('gallery-item');
-    a.appendChild(img);
-  
-    li.appendChild(a);
-    ul.appendChild(li);
-  
-    a.addEventListener('click', (event) => {
-      //linklerin fotoğrafı indirmesini engellemek için
-      event.preventDefault();
-  
-      //linke tıklanınca modal oluşturulması için
-      const modal = basicLightbox.create(
-        `<img src="${event.target.dataset.source}" />`
-      );
-  
-      //modal açılması için
-      modal.show();
-  
-      //modal açıkken esc tuşu ile kapatabilmek  için
-      if (modal.visible()) {
-        document.addEventListener('keydown', (event) => {
-          if (event.key === 'Escape') {
-            modal.close();
-          }
-        });
-      }
-    });
-  });
+  const ul = document.querySelector('.gallery');
+
+const markup = images
+  .map(
+    ({ preview, original, description }) => `
+    <li class="gallery-item">
+      <a class="gallery-link" href="${original}">
+        <img
+          class="gallery-image"
+          src="${preview}"
+          data-source="${original}"
+          alt="${description}"
+        />
+      </a>
+    </li>`
+  )
+  .join('');
+
+ul.insertAdjacentHTML('beforeend', markup);
+
+ul.addEventListener('click', (event) => {
+  event.preventDefault();
+
+  const clickedImage = event.target.closest('.gallery-image');
+  if (!clickedImage) return;
+
+  const modal = basicLightbox.create(
+    `<img src="${clickedImage.dataset.source}" alt="${clickedImage.alt}" />`
+  );
+
+  modal.show();
+
+  // ESC ile kapatma
+  const onEsc = (e) => {
+    if (e.key === 'Escape') {
+      modal.close();
+      document.removeEventListener('keydown', onEsc);
+    }
+  };
+
+  document.addEventListener('keydown', onEsc);
+});
